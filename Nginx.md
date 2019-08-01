@@ -338,6 +338,14 @@ qVRRP定义块
 
 ### 测试验证Nginx、应用程序是否开机自启动，启动用户是否为非root用户验证
 
+命令：
+
+|操作项目|名利|期望结果|
+|---|---|---|
+|nginx停止命令|nginx -s stop|nginx进程号不存在|
+|nginx启动|1.进入nginx  sbin目录:cd    /usr/local/nginx/sbin 2.执行启动命令: ./nginx -c ../conf/nginx.conf|nginx进程号存在|
+
+
 进入安装nginx目录,启动nginx服务
 
 ```
