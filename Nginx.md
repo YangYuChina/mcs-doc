@@ -127,22 +127,42 @@ priority 100
 
 ### ip漂移测试
 
-```
-// ip漂移测试
-[root@lb-node1 ~]# ip a |grep eth0
-2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
-    inet 192.168.1.11/32 brd 192.168.1.11 scope global noprefixroute eth0
-    inet 192.168.1.100/24 scope global eth0
-[root@lb-node1 ~]# 
 
-//模拟master故障，此时备机获取192.168.1.100的VIP 
-[root@lb-node1 ~]# systemctl stop keepalived.service
-[root@lb-node2 ~]# ip a |grep eth0
-2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
-    inet 192.168.1.11/32 brd 192.168.1.11 scope global noprefixroute eth0
-    inet 192.168.1.100/24 scope global eth0
-[root@lb-node2 ~]# 
+我们在主服务器上执行命令ip a，显示如下：
 ```
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 00:0c:29:aa:a1:e4 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.103/24 brd 255.255.255.255 scope global eth0
+    inet 192.168.1.110/32 scope global eth0
+```
+证明主服务器已经绑定了虚拟ip 192.168.1.110
+
+在从服务器上执行命令ip a,显示如下：
+```
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 00:0c:29:2b:94:3b brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.101/24 brd 255.255.255.255 scope global eth0
+    ```
+显示表明从服务器上没有绑定vip 192.168.1.110,只有本机真实ip192.168.1.101
+
+下面我们停止主服务器的nginx进程，再看看ip绑定情况:
+
+主服务器的情况：
+```
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 00:0c:29:aa:a1:e4 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.103/24 brd 255.255.255.255 scope global eth0
+    ```
+从服务器的情况：
+```
+
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether 00:0c:29:2b:94:3b brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.101/24 brd 255.255.255.255 scope global eth0
+    inet 192.168.1.110/32 scope global eth0
+    ```
+由此可见vip已经指向了从服务器。
+
 
 
 ### 在两台Web Server上执行realserver.sh脚本，为lo:0绑定VIP地址192.168.1.100、抑制arp广播
